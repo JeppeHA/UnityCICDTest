@@ -1,6 +1,9 @@
 name: GameCI Template
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -10,6 +13,10 @@ env:
 permissions:
   contents: read
   checks: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   testRunner:
@@ -196,23 +203,22 @@ jobs:
           name: build-StandaloneOSX
           path: build/StandaloneOSX
 
-  deployPages:
+  deployItch:
     needs: buildWebGL
-    name: Deploy to Github Pages
+    name: Deploy to itch.io
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           name: build-WebGL
-          path: build
+          path: build/WebGL
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: build/WebGL
+      - name: Upload to itch.io
+        uses: manleydev/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: html5
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+          ITCH_USER: ${{ vars.ITCH_USER }}
+          PACKAGE: build/WebGL
