@@ -2,7 +2,7 @@ name: GameCI Template
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
   workflow_dispatch:
 
@@ -208,7 +208,7 @@ jobs:
     needs: buildWebGL
     name: Deploy to itch.io
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v4
         with:
